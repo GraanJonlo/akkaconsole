@@ -1,31 +1,31 @@
-﻿using System;
-using Akka.Actor;
-
-namespace AkkaConsole
+﻿namespace AkkaConsole
 {
+    using System;
+    using Akka.Actor;
+
     internal class ConsoleReaderActor : ReceiveActor
     {
-        private readonly IActorRef _consoleWriter;
+        private readonly IActorRef _writer;
 
-        public ConsoleReaderActor(IActorRef consoleWriter)
+        public ConsoleReaderActor(IActorRef writer)
         {
-            _consoleWriter = consoleWriter;
-            Receive<Messages.StartMonitoringIn>((msg) => { Self.Tell(new Messages.ContinueMonitoringIn()); });
-            Receive<Messages.ContinueMonitoringIn>((msg) => { GetAndValidateInput(); });
+            _writer = writer;
+            Receive<MonitorForInput>(msg => { GetAndValidateInput(); });
         }
 
         private void GetAndValidateInput()
         {
-            var message = Console.ReadLine();
-            if (!string.IsNullOrEmpty(message) && string.Equals(message, "exit", StringComparison.OrdinalIgnoreCase))
+            var input = Console.ReadLine();
+            if (!string.IsNullOrEmpty(input) && string.Equals(input, "exit", StringComparison.OrdinalIgnoreCase))
             {
                 Context.System.Terminate();
                 return;
             }
 
-            _consoleWriter.Tell(new Messages.WriteToOut(message));
-
-            Self.Tell(new Messages.ContinueMonitoringIn());
+            _writer.Tell(new ConsoleWriterActor.WriteToOut(input));
         }
+
+        public class MonitorForInput
+        { }
     }
 }

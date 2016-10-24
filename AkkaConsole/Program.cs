@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using Akka.Actor;
-
-namespace AkkaConsole
+﻿namespace AkkaConsole
 {
+    using System.Threading.Tasks;
+    using Akka.Actor;
+
     public static class Program
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             AsyncMain().Wait();
         }
@@ -14,13 +14,13 @@ namespace AkkaConsole
         {
             using (var myActorSystem = ActorSystem.Create("MyActorSystem"))
             {
-                Props consoleWriterProps = Props.Create<ConsoleWriterActor>();
-                IActorRef consoleWriterActor = myActorSystem.ActorOf(consoleWriterProps, "consoleWriterActor");
+                Props writerProps = Props.Create<ConsoleWriterActor>();
+                IActorRef writerActor = myActorSystem.ActorOf(writerProps);
 
-                Props consoleReaderProps = Props.Create(() => new ConsoleReaderActor(consoleWriterActor));
-                IActorRef consoleReaderActor = myActorSystem.ActorOf(consoleReaderProps);
+                Props readerProps = Props.Create(() => new ConsoleReaderActor(writerActor));
+                IActorRef readerActor = myActorSystem.ActorOf(readerProps);
 
-                consoleReaderActor.Tell(new Messages.StartMonitoringIn());
+                readerActor.Tell(new ConsoleReaderActor.MonitorForInput());
 
                 await myActorSystem.WhenTerminated;
             }
